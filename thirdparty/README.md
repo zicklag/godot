@@ -123,6 +123,21 @@ changes to ensure they build for Javascript/HTML5. Those
 changes are marked with `// -- GODOT --` comments.
 
 
+## minizip
+
+- Upstream: http://zlib.net
+- Version: 1.2.4 (zlib contrib)
+- License: zlib
+
+Files extracted from the upstream source:
+
+- contrib/minizip/{crypt.h,ioapi.{c,h},zip.{c,h},unzip.{c,h}}
+
+Important: Some files have Godot-made changes for use in core/io.
+They are marked with `/* GODOT start */` and `/* GODOT end */`
+comments and a patch is provided in the minizip/ folder.
+
+
 ## openssl
 
 - Upstream: https://www.openssl.org
