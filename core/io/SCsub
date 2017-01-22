@@ -6,4 +6,13 @@ env.add_source_files(env.core_sources, "*.cpp")
 env.add_source_files(env.core_sources, "*.c")
 # env.core_sources.append("io/fastlz.c")
 
+thirdparty_dir = "#thirdparty/minizip/"
+thirdparty_sources = [
+    "ioapi.c",
+    "unzip.c",
+    "zip.c",
+]
+thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+env.add_source_files(env.core_sources, thirdparty_sources)
+
 Export('env')

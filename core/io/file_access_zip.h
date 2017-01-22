@@ -31,10 +31,12 @@
 #ifndef FILE_ACCESS_Zip_H
 #define FILE_ACCESS_Zip_H
 
-#include <stdlib.h>
 #include "core/io/file_access_pack.h"
-#include "unzip.h"
 #include "map.h"
+
+#include "thirdparty/minizip/unzip.h"
+
+#include <stdlib.h>
 
 class ZipArchive : public PackSource {
 

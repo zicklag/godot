@@ -29,10 +29,11 @@
 #ifndef ZIP_IO_H
 #define ZIP_IO_H
 
-#include "io/zip.h"
-#include "io/unzip.h"
-#include "os/file_access.h"
 #include "os/copymem.h"
+#include "os/file_access.h"
+
+#include "thirdparty/minizip/unzip.h"
+#include "thirdparty/minizip/zip.h"
 
 
 static void* zipio_open(void* data, const char* p_fname, int mode) {
