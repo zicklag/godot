@@ -235,6 +235,7 @@ public:
 
 	virtual void move_window_to_foreground();
 	virtual String get_data_dir() const;
+	virtual String get_mods_dir() const;
 
 	virtual bool check_feature_support(const String &p_feature);
 

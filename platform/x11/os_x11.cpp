@@ -440,6 +440,7 @@ void OS_X11::initialize(const VideoMode &p_desired, int p_video_driver, int p_au
 	joypad = memnew(JoypadLinux(input));
 #endif
 	_ensure_data_dir();
+	_ensure_mods_dir();
 }
 
 void OS_X11::finalize() {

@@ -150,6 +150,7 @@ public:
 
 	virtual Error shell_open(String p_uri);
 	virtual String get_data_dir() const;
+	virtual String get_mods_dir() const;
 	String get_executable_path() const;
 	virtual String get_resource_dir() const;
 

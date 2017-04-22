@@ -39,6 +39,7 @@ String DirAccess::_get_root_path() const {
 
 		case ACCESS_RESOURCES: return GlobalConfig::get_singleton()->get_resource_path();
 		case ACCESS_USERDATA: return OS::get_singleton()->get_data_dir();
+		case ACCESS_MODS: return OS::get_singleton()->get_mods_dir();
 		default: return "";
 	}
 
@@ -50,6 +51,7 @@ String DirAccess::_get_root_string() const {
 
 		case ACCESS_RESOURCES: return "res://";
 		case ACCESS_USERDATA: return "user://";
+		case ACCESS_MODS: return "mods://";
 		default: return "";
 	}
 
@@ -160,6 +162,8 @@ Error DirAccess::make_dir_recursive(String p_dir) {
 		base = "res://";
 	else if (full_dir.begins_with("user://"))
 		base = "user://";
+	else if (full_dir.begins_with("mods://"))
+		base = "mods://";
 	else if (full_dir.begins_with("/"))
 		base = "/";
 	else if (full_dir.find(":/") != -1) {
@@ -226,6 +230,19 @@ String DirAccess::fix_path(String p_path) const {
 			}
 
 		} break;
+		case ACCESS_MODS: {
+
+			if (p_path.begins_with("mods://")) {
+
+				String mods_dir = OS::get_singleton()->get_mods_dir();
+				if (mods_dir != "") {
+
+					return p_path.replace_first("mods:/", mods_dir);
+				};
+				return p_path.replace_first("mods://", "");
+			}
+
+		} break;
 		case ACCESS_FILESYSTEM: {
 
 			return p_path;
@@ -246,6 +263,9 @@ DirAccess *DirAccess::create_for_path(const String &p_path) {
 	} else if (p_path.begins_with("user://")) {
 
 		da = create(ACCESS_USERDATA);
+	} else if (p_path.begins_with("mods://")) {
+
+		da = create(ACCESS_MODS);
 	} else {
 
 		da = create(ACCESS_FILESYSTEM);

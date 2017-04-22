@@ -85,6 +85,7 @@ protected:
 	int last_order;
 	Map<StringName, VariantContainer> props;
 	String resource_path;
+	String mods_path;
 	Map<StringName, PropertyInfo> custom_prop_info;
 	bool disable_platform_override;
 	bool using_datapack;

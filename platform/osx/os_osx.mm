@@ -955,6 +955,7 @@ void OS_OSX::initialize(const VideoMode &p_desired, int p_video_driver, int p_au
 	power_manager = memnew(power_osx);
 
 	_ensure_data_dir();
+	_ensure_mods_dir();
 
 	NSArray *screenArray = [NSScreen screens];
 	printf("nscreen count %i\n", (int)[screenArray count]);

@@ -71,6 +71,7 @@ void FileAccess::_set_access_type(AccessType p_access) {
 };
 
 FileAccess *FileAccess::create_for_path(const String &p_path) {
+    ERR_EXPLAIN("Creating AccessType for " + p_path)
 
 	FileAccess *ret = NULL;
 	if (p_path.begins_with("res://")) {
@@ -79,7 +80,9 @@ FileAccess *FileAccess::create_for_path(const String &p_path) {
 	} else if (p_path.begins_with("user://")) {
 
 		ret = create(ACCESS_USERDATA);
+	} else if (p_path.begins_with("mods://")) {
 
+		ret = create(ACCESS_MODS);
 	} else {
 
 		ret = create(ACCESS_FILESYSTEM);
@@ -158,6 +161,19 @@ String FileAccess::fix_path(const String &p_path) const {
 					return r_path.replace("user:/", data_dir);
 				};
 				return r_path.replace("user://", "");
+			}
+
+		} break;
+		case ACCESS_MODS: {
+
+			if (r_path.begins_with("mods://")) {
+
+				String mods_dir = OS::get_singleton()->get_mods_dir();
+				if (mods_dir != "") {
+
+					return r_path.replace("mods:/", mods_dir);
+				};
+				return r_path.replace("mods://", "");
 			}
 
 		} break;

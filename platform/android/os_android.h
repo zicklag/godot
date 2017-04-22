@@ -217,6 +217,7 @@ public:
 
 	virtual Error shell_open(String p_uri);
 	virtual String get_data_dir() const;
+	virtual String get_mods_dir() const;
 	virtual String get_resource_dir() const;
 	virtual String get_locale() const;
 	virtual String get_model_name() const;

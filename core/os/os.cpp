@@ -279,7 +279,12 @@ String OS::get_safe_application_name() const {
 
 String OS::get_data_dir() const {
 
-	return ".";
+	return "./data";
+};
+
+String OS::get_mods_dir() const {
+
+	return "./mods";
 };
 
 Error OS::shell_open(String p_uri) {
@@ -383,6 +388,25 @@ void OS::_ensure_data_dir() {
 	Error err = da->make_dir_recursive(dd);
 	if (err != OK) {
 		ERR_EXPLAIN("Error attempting to create data dir: " + dd);
+	}
+	ERR_FAIL_COND(err != OK);
+
+	memdelete(da);
+}
+
+void OS::_ensure_mods_dir() {
+
+	String mod_dir = get_mods_dir();
+	DirAccess *da = DirAccess::open(mod_dir);
+	if (da) {
+		memdelete(da);
+		return;
+	}
+
+	da = DirAccess::create(DirAccess::ACCESS_FILESYSTEM);
+	Error err = da->make_dir_recursive(mod_dir);
+	if (err != OK) {
+		ERR_EXPLAIN("Error attempting to create mods dir: " + mod_dir);
 	}
 	ERR_FAIL_COND(err != OK);
 

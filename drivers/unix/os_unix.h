@@ -116,6 +116,7 @@ public:
 	virtual String get_installed_templates_path() const;
 	virtual String get_executable_path() const;
 	virtual String get_data_dir() const;
+	virtual String get_mods_dir() const;
 
 	virtual bool check_feature_support(const String &p_feature);
 

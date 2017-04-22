@@ -109,6 +109,7 @@ protected:
 	virtual void set_cmdline(const char *p_execpath, const List<String> &p_args);
 
 	void _ensure_data_dir();
+	void _ensure_mods_dir();
 
 public:
 	typedef int64_t ProcessID;
@@ -315,6 +316,7 @@ public:
 
 	String get_safe_application_name() const;
 	virtual String get_data_dir() const;
+	virtual String get_mods_dir() const;
 	virtual String get_resource_dir() const;
 
 	enum SystemDir {

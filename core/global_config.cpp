@@ -59,6 +59,7 @@ String GlobalConfig::localize_path(const String &p_path) const {
 		return p_path; //not initialied yet
 
 	if (p_path.begins_with("res://") || p_path.begins_with("user://") ||
+			p_path.begins_with("mods://") ||
 			(p_path.is_abs_path() && !p_path.begins_with(resource_path)))
 		return p_path.simplify_path();
 
@@ -73,11 +74,17 @@ String GlobalConfig::localize_path(const String &p_path) const {
 
 		memdelete(dir);
 
-		if (!cwd.begins_with(resource_path)) {
-			return p_path;
-		};
+		if (cwd.begins_with(resource_path)) {
 
-		return cwd.replace_first(resource_path, "res:/");
+			return cwd.replace_first(resource_path, "res:/");
+		} else if (cwd.begins_with(mods_path)) {
+
+			return cwd.replace_first(mods_path, "mod:/");
+		} else {
+
+			return p_path;
+		}
+
 	} else {
 
 		memdelete(dir);
@@ -110,9 +117,11 @@ String GlobalConfig::globalize_path(const String &p_path) const {
 		if (resource_path != "") {
 
 			return p_path.replace("res:/", resource_path);
-		};
-		return p_path.replace("res://", "");
-	};
+		}
+	} else if (p_path.begins_with("mods://")) {
+
+		return p_path.replace("mods:/", OS::get_singleton()->get_mods_dir());
+	}
 
 	return p_path;
 }

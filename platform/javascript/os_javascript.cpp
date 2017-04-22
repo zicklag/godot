@@ -826,8 +826,13 @@ String OS_JavaScript::get_data_dir() const {
 	if (get_data_dir_func)
 		return get_data_dir_func();
 	*/
-	return "/userfs";
+	return "/userfs/data";
 	//return GlobalConfig::get_singleton()->get_singleton_object("GodotOS")->call("get_data_dir");
+};
+
+String OS_JavaScript::get_mods_dir() const {
+
+	return "/userfs/mods";
 };
 
 String OS_JavaScript::get_executable_path() const {

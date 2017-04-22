@@ -43,6 +43,7 @@ public:
 	enum AccessType {
 		ACCESS_RESOURCES,
 		ACCESS_USERDATA,
+		ACCESS_MODS,
 		ACCESS_FILESYSTEM,
 		ACCESS_MAX
 	};

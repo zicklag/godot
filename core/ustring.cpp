@@ -3129,6 +3129,10 @@ String String::simplify_path() const {
 
 		drive = "user://";
 		s = s.substr(6, s.length());
+	} else if (s.begins_with("mods://")) {
+
+		drive = "mods://";
+		s = s.substr(6, s.length());
 	} else if (s.begins_with("/") || s.begins_with("\\")) {
 
 		drive = s.substr(0, 1);

@@ -184,6 +184,7 @@ public:
 	Error shell_open(String p_uri);
 
 	String get_data_dir() const;
+	String get_mods_dir() const;
 
 	void set_locale(String p_locale);
 	String get_locale() const;

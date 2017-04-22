@@ -1087,6 +1087,7 @@ void OS_Windows::initialize(const VideoMode &p_desired, int p_video_driver, int 
 	//RegisterTouchWindow(hWnd, 0); // Windows 7
 
 	_ensure_data_dir();
+	_ensure_mods_dir();
 
 	DragAcceptFiles(hWnd, true);
 
@@ -2255,6 +2256,7 @@ String OS_Windows::get_system_dir(SystemDir p_dir) const {
 	ERR_FAIL_COND_V(res != S_OK, String());
 	return String(szPath);
 }
+
 String OS_Windows::get_data_dir() const {
 
 	String an = get_safe_application_name();
@@ -2264,9 +2266,29 @@ String OS_Windows::get_data_dir() const {
 
 			bool use_godot = GlobalConfig::get_singleton()->get("application/use_shared_user_dir");
 			if (!use_godot)
-				return (OS::get_singleton()->get_environment("APPDATA") + "/" + an).replace("\\", "/");
+				return (OS::get_singleton()->get_environment("APPDATA") + "/" + an).replace("\\", "/") + "/data";
 			else
-				return (OS::get_singleton()->get_environment("APPDATA") + "/Godot/app_userdata/" + an).replace("\\", "/");
+				return (OS::get_singleton()->get_environment("APPDATA") + "/Godot/app_userdata/" + an).replace("\\", "/") +
+					"/data";
+		}
+	}
+
+	return GlobalConfig::get_singleton()->get_resource_path();
+}
+
+String OS_Windows::get_mods_dir() const {
+
+	String an = get_safe_application_name();
+	if (an != "") {
+
+		if (has_environment("APPDATA")) {
+
+			bool use_godot = GlobalConfig::get_singleton()->get("application/use_shared_user_dir");
+			if (!use_godot)
+				return (OS::get_singleton()->get_environment("APPDATA") + "/" + an).replace("\\", "/") + "/mods";
+			else
+				return (OS::get_singleton()->get_environment("APPDATA") + "/Godot/app_userdata/" + an).replace("\\", "/") +
+					"/mods";
 		}
 	}
 

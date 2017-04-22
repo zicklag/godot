@@ -692,6 +692,12 @@ String OS_Android::get_data_dir() const {
 	//return GlobalConfig::get_singleton()->get_singleton_object("GodotOS")->call("get_data_dir");
 }
 
+String OS_Android::get_mods_dir() const {
+
+	// TODO: Implement a mod dir on Android
+	return NULL
+}
+
 void OS_Android::set_screen_orientation(ScreenOrientation p_orientation) {
 
 	if (set_screen_orientation_func)

@@ -89,6 +89,7 @@ void OS_Server::initialize(const VideoMode &p_desired, int p_video_driver, int p
 	input = memnew(InputDefault);
 
 	_ensure_data_dir();
+	_ensure_mods_dir();
 }
 void OS_Server::finalize() {
 

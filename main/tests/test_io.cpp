@@ -110,6 +110,7 @@ MainLoop *test() {
 		FileAccess::make_default<FileAccessMemory>(FileAccess::ACCESS_RESOURCES);
 		FileAccess::make_default<FileAccessMemory>(FileAccess::ACCESS_FILESYSTEM);
 		FileAccess::make_default<FileAccessMemory>(FileAccess::ACCESS_USERDATA);
+		FileAccess::make_default<FileAccessMemory>(FileAccess::ACCESS_MODS);
 
 		print_line("archive test");
 #if 0

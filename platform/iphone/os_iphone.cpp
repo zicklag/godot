@@ -78,7 +78,8 @@ void OSIPhone::set_data_dir(String p_dir) {
 
 	DirAccess *da = DirAccess::open(p_dir);
 
-	data_dir = da->get_current_dir();
+	data_dir = da->get_current_dir() + "/data";
+	mods_dir = da->get_current_dir() + "/mods";
 	printf("setting data dir to %ls from %ls\n", data_dir.c_str(), p_dir.c_str());
 	memdelete(da);
 };
@@ -483,6 +484,11 @@ void OSIPhone::set_cursor_shape(CursorShape p_shape){
 String OSIPhone::get_data_dir() const {
 
 	return data_dir;
+};
+
+String OSIPhone::get_mods_dir() const {
+
+	return mods_dir;
 };
 
 String OSIPhone::get_name() {

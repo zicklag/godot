@@ -306,6 +306,7 @@ void OSUWP::initialize(const VideoMode &p_desired, int p_video_driver, int p_aud
 	}
 
 	_ensure_data_dir();
+	_ensure_mods_dir();
 
 	if (is_keep_screen_on())
 		display_request->RequestActive();
@@ -853,7 +854,14 @@ String OSUWP::get_data_dir() const {
 
 	Windows::Storage::StorageFolder ^ data_folder = Windows::Storage::ApplicationData::Current->LocalFolder;
 
-	return String(data_folder->Path->Data()).replace("\\", "/");
+	return String(data_folder->Path->Data()).replace("\\", "/") + "/data";
+}
+
+String OSUWP::get_mods_dir() const {
+
+	Windows::Storage::StorageFolder ^ mods_folder = Windows::Storage::ApplicationData::Current->LocalFolder;
+
+	return String(mods_folder->Path->Data()).replace("\\", "/") + "/mods";
 }
 
 bool OSUWP::check_feature_support(const String &p_feature) {

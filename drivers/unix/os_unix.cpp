@@ -140,10 +140,12 @@ void OS_Unix::initialize_core() {
 #endif
 	FileAccess::make_default<FileAccessUnix>(FileAccess::ACCESS_RESOURCES);
 	FileAccess::make_default<FileAccessUnix>(FileAccess::ACCESS_USERDATA);
+	FileAccess::make_default<FileAccessUnix>(FileAccess::ACCESS_MODS);
 	FileAccess::make_default<FileAccessUnix>(FileAccess::ACCESS_FILESYSTEM);
 	//FileAccessBufferedFA<FileAccessUnix>::make_default();
 	DirAccess::make_default<DirAccessUnix>(DirAccess::ACCESS_RESOURCES);
 	DirAccess::make_default<DirAccessUnix>(DirAccess::ACCESS_USERDATA);
+	DirAccess::make_default<DirAccessUnix>(DirAccess::ACCESS_MODS);
 	DirAccess::make_default<DirAccessUnix>(DirAccess::ACCESS_FILESYSTEM);
 
 #ifndef NO_NETWORK
@@ -496,9 +498,27 @@ String OS_Unix::get_data_dir() const {
 
 			bool use_godot = GlobalConfig::get_singleton()->get("application/use_shared_user_dir");
 			if (use_godot)
-				return get_environment("HOME") + "/.godot/app_userdata/" + an;
+				return get_environment("HOME") + "/.godot/app_userdata/" + an + "/data";
 			else
-				return get_environment("HOME") + "/." + an;
+				return get_environment("HOME") + "/." + an + "/data";
+		}
+	}
+
+	return GlobalConfig::get_singleton()->get_resource_path();
+}
+
+String OS_Unix::get_mods_dir() const {
+
+	String an = get_safe_application_name();
+	if (an != "") {
+
+		if (has_environment("HOME")) {
+
+			bool use_godot = GlobalConfig::get_singleton()->get("application/use_shared_user_dir");
+			if (use_godot)
+				return get_environment("HOME") + "/.godot/app_userdata/" + an + "/mods";
+			else
+				return get_environment("HOME") + "/." + an + "/mods";
 		}
 	}
 
