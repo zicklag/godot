@@ -3127,7 +3127,7 @@ Error EditorNode::load_scene(const String &p_scene, bool p_ignore_broken_deps, b
 
 	String lpath = GlobalConfig::get_singleton()->localize_path(p_scene);
 
-	if (!lpath.begins_with("res://")) {
+	if (!lpath.begins_with("res://") && !lpath.begins_with("mods://")) {
 
 		current_option = -1;
 		//accept->get_cancel()->hide();

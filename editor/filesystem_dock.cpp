@@ -43,7 +43,7 @@ bool FileSystemDock::_create_tree(TreeItem *p_parent, EditorFileSystemDirectory 
 	TreeItem *item = tree->create_item(p_parent);
 	String dname = p_dir->get_name();
 	if (dname == "")
-		dname = "res://";
+		dname = "Project:";
 	else {
 		// collapse every tree item but the root folder
 		item->set_collapsed(true);
@@ -53,7 +53,8 @@ bool FileSystemDock::_create_tree(TreeItem *p_parent, EditorFileSystemDirectory 
 	item->set_icon(0, get_icon("Folder", "EditorIcons"));
 	item->set_selectable(0, true);
 	String lpath = p_dir->get_path();
-	if (lpath != "res://" && lpath.ends_with("/")) {
+
+	if (!lpath.ends_with("://") && lpath.ends_with("/")) {
 		lpath = lpath.substr(0, lpath.length() - 1);
 	}
 	item->set_metadata(0, lpath);
@@ -78,15 +79,12 @@ void FileSystemDock::_update_tree() {
 	favorites->set_selectable(0, false);
 	Vector<String> faves = EditorSettings::get_singleton()->get_favorite_dirs();
 	for (int i = 0; i < faves.size(); i++) {
-		if (!faves[i].begins_with("res://"))
+		if (!faves[i].begins_with("res://") && !faves[i].begins_with("mods://"))
 			continue;
 
 		TreeItem *ti = tree->create_item(favorites);
 		String fv = faves[i];
-		if (fv == "res://")
-			ti->set_text(0, "/");
-		else
-			ti->set_text(0, faves[i].get_file());
+		ti->set_text(0, faves[i].get_file());
 		ti->set_icon(0, get_icon("Folder", "EditorIcons"));
 		ti->set_selectable(0, true);
 		ti->set_metadata(0, faves[i]);
@@ -265,7 +263,7 @@ String FileSystemDock::get_selected_path() const {
 	if (!sel)
 		return "";
 	String path = sel->get_metadata(0);
-	return "res://" + path;
+	return path;
 }
 
 String FileSystemDock::get_current_path() const {
@@ -277,7 +275,8 @@ void FileSystemDock::navigate_to_path(const String &p_path) {
 	// If the path is a file, do not only go to the directory in the tree, also select the file in the file list.
 	String dir_path = "";
 	String file_name = "";
-	DirAccess *dirAccess = DirAccess::open("res://");
+	Vector<String> p_path_split = p_path.split("/");
+	DirAccess *dirAccess = DirAccess::open(p_path_split[0] + "/");
 	if (dirAccess->file_exists(p_path)) {
 		dir_path = p_path.get_base_dir();
 		file_name = p_path.get_file();
@@ -447,7 +446,7 @@ void FileSystemDock::_update_files(bool p_keep_selection) {
 
 	if (use_folders) {
 
-		if (path != "res://") {
+		if (!path.ends_with("://")) {
 
 			if (use_thumbnails) {
 				files->add_item("..", folder_thumbnail, true);
@@ -456,7 +455,7 @@ void FileSystemDock::_update_files(bool p_keep_selection) {
 			}
 
 			String bd = path.get_base_dir();
-			if (bd != "res://" && !bd.ends_with("/"))
+			if (!bd.ends_with("://") && !bd.ends_with("/"))
 				bd += "/";
 
 			files->set_item_metadata(files->get_item_count() - 1, bd);
@@ -754,9 +753,11 @@ void FileSystemDock::_rename_operation(const String &p_to_path) {
 
 	//finally, perform moves
 
-	DirAccess *da = DirAccess::create(DirAccess::ACCESS_RESOURCES);
+	DirAccess *da = DirAccess::create(DirAccess::ACCESS_FILESYSTEM);
 
-	Error err = da->rename(move_files[0], p_to_path);
+	String global_to_path = GlobalConfig::get_singleton()->globalize_path(p_to_path);
+	String global_move_file = GlobalConfig::get_singleton()->globalize_path(move_files[0]);
+	Error err = da->rename(global_move_file, global_to_path);
 	print_line("moving file " + move_files[0] + " to " + p_to_path);
 	if (err != OK) {
 		EditorNode::get_singleton()->add_io_error("Error moving file:\n" + move_files[0] + "\n");
@@ -793,8 +794,8 @@ void FileSystemDock::_move_operation(const String &p_to_path) {
 
 	//make list of remaps
 	Map<String, String> renames;
-	String repfrom = path == "res://" ? path : String(path + "/");
-	String repto = p_to_path == "res://" ? p_to_path : String(p_to_path + "/");
+	String repfrom = path.ends_with("://") ? path : String(path + "/");
+	String repto = p_to_path.ends_with("://") ? p_to_path : String(p_to_path + "/");
 
 	for (int i = 0; i < move_files.size(); i++) {
 		renames[move_files[i]] = move_files[i].replace_first(repfrom, repto);
@@ -824,12 +825,14 @@ void FileSystemDock::_move_operation(const String &p_to_path) {
 
 	//finally, perform moves
 
-	DirAccess *da = DirAccess::create(DirAccess::ACCESS_RESOURCES);
+	DirAccess *da = DirAccess::create(DirAccess::ACCESS_FILESYSTEM);
 
 	for (int i = 0; i < move_files.size(); i++) {
 
 		String to = move_files[i].replace_first(repfrom, repto);
-		Error err = da->rename(move_files[i], to);
+		String global_to = GlobalConfig::get_singleton()->globalize_path(to);
+		String global_move_file = GlobalConfig::get_singleton()->globalize_path(move_files[i]);
+		Error err = da->rename(global_move_file, global_to);
 		print_line("moving file " + move_files[i] + " to " + to);
 		if (err != OK) {
 			EditorNode::get_singleton()->add_io_error("Error moving file:\n" + move_files[i] + "\n");
@@ -839,7 +842,7 @@ void FileSystemDock::_move_operation(const String &p_to_path) {
 	for (int i = 0; i < move_dirs.size(); i++) {
 
 		String mdir = move_dirs[i];
-		if (mdir == "res://")
+		if (mdir.ends_with("://"))
 			continue;
 
 		if (mdir.ends_with("/")) {
@@ -847,7 +850,9 @@ void FileSystemDock::_move_operation(const String &p_to_path) {
 		}
 
 		String to = p_to_path.plus_file(mdir.get_file());
-		Error err = da->rename(mdir, to);
+		String global_to = GlobalConfig::get_singleton()->globalize_path(to);
+		String global_mdir = GlobalConfig::get_singleton()->globalize_path(mdir);
+		Error err = da->rename(global_mdir, global_to);
 		print_line("moving dir " + mdir + " to " + to);
 		if (err != OK) {
 			EditorNode::get_singleton()->add_io_error("Error moving dir:\n" + move_dirs[i] + "\n");
@@ -886,7 +891,7 @@ void FileSystemDock::_file_option(int p_option) {
 			}
 
 			if (path.ends_with("/")) {
-				if (path != "res://") {
+				if (!path.ends_with("://")) {
 					path = path.substr(0, path.length() - 1);
 				}
 				this->path = path;
@@ -1312,7 +1317,7 @@ void FileSystemDock::drop_data_fw(const Point2 &p_point, const Variant &p_data, 
 		ERR_FAIL_COND(files.size() != 1);
 
 		String swap = files[0];
-		if (swap != "res://" && swap.ends_with("/")) {
+		if (!swap.ends_with("://") && swap.ends_with("/")) {
 			swap = swap.substr(0, swap.length() - 1);
 		}
 
@@ -1335,7 +1340,7 @@ void FileSystemDock::drop_data_fw(const Point2 &p_point, const Variant &p_data, 
 
 		if (swap_item) {
 			swap_with = swap_item->get_metadata(0);
-			if (swap_with != "res://" && swap_with.ends_with("/")) {
+			if (!swap_with.ends_with("://") && swap_with.ends_with("/")) {
 				swap_with = swap_with.substr(0, swap_with.length() - 1);
 			}
 		}
@@ -1391,7 +1396,7 @@ void FileSystemDock::drop_data_fw(const Point2 &p_point, const Variant &p_data, 
 				String to_dir = files->get_item_metadata(at_pos);
 				if (to_dir.ends_with("/")) {
 					save_path = to_dir;
-					if (save_path != "res://")
+					if (!save_path.ends_with("://"))
 						save_path = save_path.substr(0, save_path.length() - 1);
 				}
 			}
@@ -1420,7 +1425,7 @@ void FileSystemDock::drop_data_fw(const Point2 &p_point, const Variant &p_data, 
 				ERR_FAIL_COND(to_dir == String());
 			}
 
-			if (to_dir != "res://" && to_dir.ends_with("/")) {
+			if (!to_dir.ends_with("://") && to_dir.ends_with("/")) {
 				to_dir = to_dir.substr(0, to_dir.length() - 1);
 			}
 

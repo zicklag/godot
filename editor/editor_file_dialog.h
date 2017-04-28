@@ -54,7 +54,8 @@ public:
 	enum Access {
 		ACCESS_RESOURCES,
 		ACCESS_USERDATA,
-		ACCESS_FILESYSTEM
+		ACCESS_FILESYSTEM,
+		ACCESS_MODS
 	};
 
 	enum Mode {
@@ -87,6 +88,8 @@ private:
 	ToolButton *dir_prev;
 	ToolButton *dir_next;
 	ToolButton *dir_up;
+
+	OptionButton *res_pool;
 
 	OptionButton *drives;
 	ItemList *item_list;
@@ -143,6 +146,8 @@ private:
 
 	void _item_selected(int p_item);
 	void _item_dc_selected(int p_item);
+
+	void _res_pool_selected(int p_item);
 
 	void _select_drive(int p_idx);
 	void _dir_entered(String p_dir);

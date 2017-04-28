@@ -178,7 +178,17 @@ Vector<String> EditorFileDialog::get_selected_files() const {
 
 void EditorFileDialog::update_dir() {
 
-	dir->set_text(dir_access->get_current_dir());
+	String cdir = dir_access->get_current_dir();
+	if (cdir.begins_with("res://")) {
+
+		dir->set_text(cdir.replace_first("res:/", ""));
+	} else if (cdir.begins_with("mods://")) {
+
+		dir->set_text(cdir.replace_first("mods:/", ""));
+	} else {
+
+		dir->set_text(cdir);
+	}
 }
 
 void EditorFileDialog::_dir_entered(String p_dir) {
@@ -433,6 +443,19 @@ void EditorFileDialog::_item_selected(int p_item) {
 
 		file->set_text(d["name"]);
 		_request_single_thumbnail(get_current_dir().plus_file(get_current_file()));
+	}
+}
+
+void EditorFileDialog::_res_pool_selected(int p_item) {
+
+	String pool = res_pool->get_item_text(p_item);
+
+	if (pool == "res://") {
+
+			set_access(ACCESS_RESOURCES);
+	} else if (pool == "mods://") {
+
+			set_access(ACCESS_MODS);
 	}
 }
 
@@ -846,7 +869,7 @@ EditorFileDialog::Mode EditorFileDialog::get_mode() const {
 
 void EditorFileDialog::set_access(Access p_access) {
 
-	ERR_FAIL_INDEX(p_access, 3);
+	ERR_FAIL_INDEX(p_access, 4);
 	if (access == p_access)
 		return;
 	memdelete(dir_access);
@@ -854,14 +877,23 @@ void EditorFileDialog::set_access(Access p_access) {
 		case ACCESS_FILESYSTEM: {
 
 			dir_access = DirAccess::create(DirAccess::ACCESS_FILESYSTEM);
+			res_pool->hide();
 		} break;
 		case ACCESS_RESOURCES: {
 
 			dir_access = DirAccess::create(DirAccess::ACCESS_RESOURCES);
+			dir_access->change_dir("res://");
+			res_pool->show();
 		} break;
 		case ACCESS_USERDATA: {
 
 			dir_access = DirAccess::create(DirAccess::ACCESS_USERDATA);
+		} break;
+		case ACCESS_MODS: {
+
+			dir_access = DirAccess::create(DirAccess::ACCESS_MODS);
+			dir_access->change_dir("mods://");
+			res_pool->show();
 		} break;
 	}
 	access = p_access;
@@ -1135,6 +1167,7 @@ void EditorFileDialog::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("_item_selected"), &EditorFileDialog::_item_selected);
 	ClassDB::bind_method(D_METHOD("_item_db_selected"), &EditorFileDialog::_item_dc_selected);
+	ClassDB::bind_method(D_METHOD("_res_pool_selected"), &EditorFileDialog::_res_pool_selected);
 	ClassDB::bind_method(D_METHOD("_dir_entered"), &EditorFileDialog::_dir_entered);
 	ClassDB::bind_method(D_METHOD("_file_entered"), &EditorFileDialog::_file_entered);
 	ClassDB::bind_method(D_METHOD("_action_pressed"), &EditorFileDialog::_action_pressed);
@@ -1193,6 +1226,7 @@ void EditorFileDialog::_bind_methods() {
 
 	BIND_CONSTANT(ACCESS_RESOURCES);
 	BIND_CONSTANT(ACCESS_USERDATA);
+	BIND_CONSTANT(ACCESS_MODS);
 	BIND_CONSTANT(ACCESS_FILESYSTEM);
 }
 
@@ -1284,6 +1318,12 @@ EditorFileDialog::EditorFileDialog() {
 	dir_prev->connect("pressed", this, "_go_back");
 	dir_next->connect("pressed", this, "_go_forward");
 	dir_up->connect("pressed", this, "_go_up");
+
+	res_pool = memnew(OptionButton);
+	res_pool->add_item("res://");
+	res_pool->add_item("mods://");
+	res_pool->connect("item_selected", this, "_res_pool_selected", varray(), CONNECT_DEFERRED);
+	pathhb->add_child(res_pool);
 
 	dir = memnew(LineEdit);
 	pathhb->add_child(dir);

@@ -93,11 +93,16 @@ String EditorFileSystemDirectory::get_path() const {
 	String p;
 	const EditorFileSystemDirectory *d = this;
 	while (d->parent) {
-		p = d->name + "/" + p;
+		if (d->name.ends_with("://")) {
+			p = d->name + p;
+		} else {
+			p = d->name + "/" + p;
+		}
+
 		d = d->parent;
 	}
 
-	return "res://" + p;
+	return p;
 }
 
 String EditorFileSystemDirectory::get_file_path(int p_idx) const {
@@ -105,11 +110,16 @@ String EditorFileSystemDirectory::get_file_path(int p_idx) const {
 	String file = get_file(p_idx);
 	const EditorFileSystemDirectory *d = this;
 	while (d->parent) {
-		file = d->name + "/" + file;
+		if (d->name.ends_with("://")) {
+			file = d->name + file;
+		} else {
+			file = d->name + "/" + file;
+		}
+
 		d = d->parent;
 	}
 
-	return "res://" + file;
+	return file;
 }
 
 Vector<String> EditorFileSystemDirectory::get_file_deps(int p_idx) const {
@@ -178,6 +188,7 @@ void EditorFileSystem::_scan_filesystem() {
 	sources_changed.clear();
 	file_cache.clear();
 
+	// TODO: Remove this line. Variable `project` appears unused.
 	String project = GlobalConfig::get_singleton()->get_resource_path();
 
 	String fscache = EditorSettings::get_singleton()->get_project_settings_path().plus_file("filesystem_cache2");
@@ -236,16 +247,31 @@ void EditorFileSystem::_scan_filesystem() {
 	sp.hi = 1;
 	sp.progress = &scan_progress;
 
+	// The parent filesystem
 	new_filesystem = memnew(EditorFileSystemDirectory);
 	new_filesystem->parent = NULL;
 
-	DirAccess *d = DirAccess::create(DirAccess::ACCESS_RESOURCES);
-	d->change_dir("res://");
-	_scan_new_dir(new_filesystem, d, sp);
+	// The res:// sub-filesystem
+	EditorFileSystemDirectory *resource_filesystem = memnew(EditorFileSystemDirectory);
+	DirAccess *res_dir = DirAccess::create(DirAccess::ACCESS_RESOURCES);
+	res_dir->change_dir("res://");
+	_scan_new_dir(resource_filesystem, res_dir, sp);
+	memdelete(res_dir);
+	resource_filesystem->parent = new_filesystem;
+	resource_filesystem->name = "res://";
+	new_filesystem->subdirs.push_back(resource_filesystem);
+
+	// The mods:// sub-filesystem
+	EditorFileSystemDirectory *mods_filesystem = memnew(EditorFileSystemDirectory);
+	DirAccess *mods_d = DirAccess::create(DirAccess::ACCESS_MODS);
+	mods_d->change_dir("mods://");
+	_scan_new_dir(mods_filesystem, mods_d, sp);
+	memdelete(mods_d);
+	mods_filesystem->parent = new_filesystem;
+	mods_filesystem->name = "mods://";
+	new_filesystem->subdirs.push_back(mods_filesystem);
 
 	file_cache.clear(); //clear caches, no longer needed
-
-	memdelete(d);
 
 	//save back the findings
 	//String fscache = EditorSettings::get_singleton()->get_project_settings_path().plus_file("file_cache");
@@ -669,7 +695,7 @@ void EditorFileSystem::_scan_fs_changes(EditorFileSystemDirectory *p_dir, const 
 
 		//then scan files and directories and check what's different
 
-		DirAccess *da = DirAccess::create(DirAccess::ACCESS_RESOURCES);
+		DirAccess *da = DirAccess::create_for_path(cd);
 
 		da->change_dir(cd);
 		da->list_dir_begin();
@@ -695,7 +721,7 @@ void EditorFileSystem::_scan_fs_changes(EditorFileSystemDirectory *p_dir, const 
 
 					efd->parent = p_dir;
 					efd->name = f;
-					DirAccess *d = DirAccess::create(DirAccess::ACCESS_RESOURCES);
+					DirAccess *d = DirAccess::create_for_path(cd);
 					d->change_dir(cd.plus_file(f));
 					_scan_new_dir(efd, d, p_progress.get_sub(1, 1));
 					memdelete(d);
@@ -1009,15 +1035,27 @@ bool EditorFileSystem::_find_file(const String &p_file, EditorFileSystemDirector
 
 	String f = GlobalConfig::get_singleton()->localize_path(p_file);
 
-	if (!f.begins_with("res://"))
+	String res_pool = String();
+
+	if (f.begins_with("res://")) {
+		res_pool = "res://";
+		f = f.substr(res_pool.length(), f.length());
+	} else if (f.begins_with("mods://")) {
+		res_pool = "mods://";
+		f = f.substr(res_pool.length(), f.length());
+	} else {
 		return false;
-	f = f.substr(6, f.length());
+	}
+
 	f = f.replace("\\", "/");
 
 	Vector<String> path = f.split("/");
 
-	if (path.size() == 0)
+	path.insert(0, res_pool);
+
+	if (path.size() == 0) {
 		return false;
+	}
 	String file = path[path.size() - 1];
 	path.resize(path.size() - 1);
 
@@ -1073,10 +1111,8 @@ bool EditorFileSystem::_find_file(const String &p_file, EditorFileSystemDirector
 	*r_d = fs;
 
 	if (cpos != -1) {
-
 		return true;
 	} else {
-
 		return false;
 	}
 }
@@ -1119,21 +1155,35 @@ EditorFileSystemDirectory *EditorFileSystem::get_filesystem_path(const String &p
 
 	String f = GlobalConfig::get_singleton()->localize_path(p_path);
 
-	if (!f.begins_with("res://"))
-		return NULL;
-
-	f = f.substr(6, f.length());
 	f = f.replace("\\", "/");
-	if (f == String())
+
+	String res_pool = String();
+
+	if (f.begins_with("res://")) {
+
+		res_pool = "res://";
+		f = f.substr(res_pool.length(), f.length());
+	} else if (f.begins_with("mods://")) {
+
+		res_pool = "mods://";
+		f = f.substr(res_pool.length(), f.length());
+	} else if (f == String()) {
+
 		return filesystem;
+	} else {
+
+		return NULL;
+	}
 
 	if (f.ends_with("/"))
 		f = f.substr(0, f.length() - 1);
 
-	Vector<String> path = f.split("/");
+	Vector<String> path = Vector<String>();
 
-	if (path.size() == 0)
-		return NULL;
+	if (f != String())
+		path = f.split("/");
+
+	path.insert(0, res_pool);
 
 	EditorFileSystemDirectory *fs = filesystem;
 
@@ -1216,7 +1266,7 @@ void EditorFileSystem::update_file(const String &p_file) {
 	//	fs->files[cpos]->import_modified_time=FileAccess::get_modified_time(p_file+".import");
 	//}
 
-	EditorResourcePreview::get_singleton()->call_deferred("check_for_invalidation", p_file);
+	EditorResourcePreview::get_singleton()->call_deferred("check_for_in validation", p_file);
 	call_deferred("emit_signal", "filesystem_changed"); //update later
 }
 
